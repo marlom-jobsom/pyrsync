@@ -10,7 +10,7 @@ import shlex
 
 __author__ = "Marlom Oliveira"
 __email__ = "marlomjobsom@gmail.com"
-__version__ = "1.6"
+__version__ = "1.7"
 
 # Descriptions and Help messages
 DESCRIPTION_INFO = 'A simple interface to help to synchronize files and folders using rsync'
@@ -206,18 +206,25 @@ def sync(args, rsync_cmd):
         print(bold_msg(color_msg('Command:', 'magenta')), bold_msg(color_msg(cmd, 'cyan')))
         run_cmd(cmd)
 
-    # rsync working over all origin folder
     if not args.folders and not args.files:
-        print(
-            bold_msg(color_msg('rsync is synchronizing', 'green')),
-            bold_msg(color_msg(args.origin, 'blue')),
-            bold_msg(color_msg('to', 'red')),
-            bold_msg(color_msg(args.dest, 'blue'))
-        )
+        run_mirroring(args, rsync_cmd)
 
-        cmd = '{} "{}" "{}"'.format(rsync_cmd, args.origin, args.dest)
-        print(bold_msg(color_msg('Command:', 'red')), bold_msg(color_msg(cmd, 'cyan')))
-        run_cmd(cmd)
+
+def run_mirroring(args, rsync_cmd):
+    """
+    :param argparse.Namespace args:
+    :param str rsync_cmd:
+    """
+    cmd = '{} "{}" "{}"'.format(rsync_cmd, args.origin, args.dest)
+    print(
+        bold_msg(color_msg('rsync is mirroring', 'green')),
+        bold_msg(color_msg(args.origin, 'blue')),
+        bold_msg(color_msg('→', 'red')),
+        bold_msg(color_msg(args.dest, 'blue')))
+    print(
+        bold_msg(color_msg('Command:', 'red')),
+        bold_msg(color_msg(cmd, 'cyan')))
+    run_cmd(cmd)
 
 
 def bold_msg(msg):
