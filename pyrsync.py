@@ -53,15 +53,6 @@ def init_args():
     parser.add_argument('--delete-excluded', action='store_true', help=HELP_DELETE_EXCLUDED, required=False)
     parser.add_argument('--enable_all', action='store_true', help=HELP_ENABLE_ALL, required=False)
 
-    parser.set_defaults(delete=False)
-    parser.set_defaults(verbose=False)
-    parser.set_defaults(progress=False)
-    parser.set_defaults(owner=False)
-    parser.set_defaults(group=False)
-    parser.set_defaults(executability=False)
-    parser.set_defaults(dry_run=False)
-    parser.set_defaults(delete_excluded=False)
-
     args = parser.parse_args()
 
     args.origin = remove_ending_separator(args.origin)
