@@ -33,6 +33,12 @@ HELP_EXCLUDE = 'Folders to be ignored'
 RSYNC_CMD = 'rsync -rulHt'
 
 
+def main():
+    """ Sync """
+    args = init_args()
+    sync(args, set_boolean_params(args, RSYNC_CMD))
+
+
 def init_args():
     """ Initialize arguments """
     parser = argparse.ArgumentParser(prog=DESCRIPTION_INFO, description=DESCRIPTION_INFO)
@@ -156,30 +162,6 @@ def set_boolean_params(args, rsync_cmd):
     return rsync_cmd
 
 
-def bold_msg(msg):
-    """ Boldfacing a text """
-    return '\033[1m{}\033[0m'.format(msg)
-
-
-def color_msg(msg, color_option='white'):
-    """ Coloring a text """
-    colors = {
-        'black': 0, 'red': 1, 'green': 2, 'yellow': 3,
-        'blue': 4, 'magenta': 5, 'cyan': 6, 'white': 7
-    }
-    return '\033[{}m{}\033[0m'.format(colors[color_option] + 30, msg)
-
-
-def run_cmd(cmd):
-    """ Execute command """
-    process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
-
-    while process.poll() is None:
-        print(process.stdout.readline().decode('utf-8').strip())
-
-    return process.communicate()
-
-
 def sync(args, rsync_cmd):
     """ Perform sync """
 
@@ -238,10 +220,28 @@ def sync(args, rsync_cmd):
         run_cmd(cmd)
 
 
-def main():
-    """ Sync """
-    args = init_args()
-    sync(args, set_boolean_params(args, RSYNC_CMD))
+def bold_msg(msg):
+    """ Boldfacing a text """
+    return '\033[1m{}\033[0m'.format(msg)
+
+
+def color_msg(msg, color_option='white'):
+    """ Coloring a text """
+    colors = {
+        'black': 0, 'red': 1, 'green': 2, 'yellow': 3,
+        'blue': 4, 'magenta': 5, 'cyan': 6, 'white': 7
+    }
+    return '\033[{}m{}\033[0m'.format(colors[color_option] + 30, msg)
+
+
+def run_cmd(cmd):
+    """ Execute command """
+    process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
+
+    while process.poll() is None:
+        print(process.stdout.readline().decode('utf-8').strip())
+
+    return process.communicate()
 
 
 if __name__ == '__main__':
