@@ -24,7 +24,9 @@ HELP_PROGRESS = 'Show progress during transfer'
 HELP_OWNER = 'Preserves owners'
 HELP_GROUP = 'Preserves groups'
 HELP_EXEC = 'Preserves executability'
-HELP_ENABLE_ALL = 'Enable delete, verbose, progress, owner, group and executability options'
+HELP_DRY_RUN = 'Performs a trial run with no changes made'
+HELP_DELETE_EXCLUDED = 'Deletes excluded files from destination folders'
+HELP_ENABLE_ALL = 'Enable delete, verbose, progress, owner, group, executability, and delete-excluded options'
 HELP_EXCLUDE = 'Folders to be ignored'
 
 # This command will be updated based on arguments
@@ -47,6 +49,8 @@ def init_args():
     parser.add_argument('--owner', action='store_true', help=HELP_OWNER, required=False)
     parser.add_argument('--group', action='store_true', help=HELP_GROUP, required=False)
     parser.add_argument('--executability', action='store_true', help=HELP_EXEC, required=False)
+    parser.add_argument('--dry-run', action='store_true', help=HELP_DRY_RUN, required=False)
+    parser.add_argument('--delete-excluded', action='store_true', help=HELP_DELETE_EXCLUDED, required=False)
     parser.add_argument('--enable_all', action='store_true', help=HELP_ENABLE_ALL, required=False)
 
     parser.set_defaults(delete=False)
@@ -55,6 +59,8 @@ def init_args():
     parser.set_defaults(owner=False)
     parser.set_defaults(group=False)
     parser.set_defaults(executability=False)
+    parser.set_defaults(dry_run=False)
+    parser.set_defaults(delete_excluded=False)
 
     args = parser.parse_args()
 
@@ -111,6 +117,7 @@ def init_args():
         args.owner = True
         args.group = True
         args.executability = True
+        args.delete_excluded = True
         args.enable_all = True
 
     return args
@@ -126,11 +133,11 @@ def remove_ending_separator(path):
 
 def set_boolean_params(args, rsync_cmd):
     """ Enable bool parameters on the line command """
-    opts = ['delete', 'verbose', 'progress', 'owner', 'group', 'executability']
+    opts = ['delete', 'verbose', 'progress', 'owner', 'group', 'executability', 'dry_run', 'delete_excluded']
 
     for opt in opts:
         if args.__getattribute__(opt):
-            rsync_cmd = '{} --{}'.format(rsync_cmd, opt)
+            rsync_cmd = '{} --{}'.format(rsync_cmd, opt.replace('_', '-'))
 
     return rsync_cmd
 
@@ -221,6 +228,7 @@ def main():
     """ Sync """
     args = init_args()
     sync(args, set_boolean_params(args, RSYNC_CMD))
+
 
 if __name__ == '__main__':
     main()
