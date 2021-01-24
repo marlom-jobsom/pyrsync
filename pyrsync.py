@@ -54,52 +54,11 @@ def init_args():
     parser.add_argument('--enable_all', action='store_true', help=HELP_ENABLE_ALL, required=False)
 
     args = parser.parse_args()
-
     args.origin = remove_ending_separator(args.origin)
     args.dest = remove_ending_separator(args.dest)
-
-    folders = []
-    files = []
-    excludes = []
-
-    for _folder in args.folders:
-        _folder = remove_ending_separator(_folder)
-
-        # In case beginning of path matches with origin, remove it from folder path
-        if _folder.startswith(args.origin):
-            _folder = _folder.replace(args.origin, '').strip()
-
-        if not os.path.exists(os.path.join(args.origin, _folder)):
-            raise FileNotFoundError(
-                'Folder does not exist on origin: {}'.format(
-                    os.path.join(args.origin, _folder)
-                )
-            )
-
-        folders.append(_folder)
-
-    for _file in args.files:
-        _file = remove_ending_separator(_file)
-
-        # In case beginning of path matches with origin, remove it from file path
-        if _file.startswith(args.origin):
-            _file = _file.replace(args.origin, '').strip()
-
-        if not os.path.isfile(os.path.join(args.origin, _file)):
-            raise FileNotFoundError(
-                'File does not exist on origin: {}'.format(
-                    os.path.join(args.origin, _file)
-                )
-            )
-
-        files.append(_file)
-
-    for _exclude in args.exclude:
-        excludes.append('--exclude "{}"'.format(_exclude))
-
-    args.folders = folders
-    args.files = files
-    args.exclude = excludes
+    set_folders_args(args)
+    set_files_args(args)
+    set_excludes_args(args)
 
     if args.enable_all:
         args.delete = True
@@ -115,11 +74,76 @@ def init_args():
 
 
 def remove_ending_separator(path):
-    """ Remove folder separator from end """
+    """
+    :param str path:
+    """
     if path.endswith(os.sep):
         path = path[:-1]
 
     return path
+
+
+def remove_origin_arg_from_path_arg(origin, path):
+    """ e.g: origin: "/home/user/code"; folder: "/user/code". The result will be folder: "code"
+    :param str origin:
+    :param str path:
+    """
+    path = remove_ending_separator(path)
+
+    if path.startswith(origin):
+        path = path.replace(origin, '').strip()
+
+    return path
+
+
+def set_folders_args(args):
+    """
+    :param argparse.Namespace args:
+    """
+    folders = list()
+
+    for folder in args.folders:
+        folder = remove_origin_arg_from_path_arg(args.origin, folder)
+        folder_path = os.path.join(args.origin, folder)
+
+        if not os.path.exists(folder_path):
+            template = 'Folder does not exist on origin: {}'
+            raise FileNotFoundError(template.format(folder_path))
+
+        folders.append(folder)
+
+    args.folders = folders
+
+
+def set_files_args(args):
+    """
+    :param argparse.Namespace args:
+    """
+    files = list()
+
+    for file in args.files:
+        file = remove_origin_arg_from_path_arg(args.origin, file)
+        file_path = os.path.join(args.origin, file)
+
+        if not os.path.isfile(file_path):
+            template = 'File does not exist on origin: {}'
+            raise FileNotFoundError(template.format(file_path))
+
+        files.append(file)
+
+    args.files = files
+
+
+def set_excludes_args(args):
+    """
+    :param argparse.Namespace args:
+    """
+    excludes = []
+
+    for exclude in args.exclude:
+        excludes.append('--exclude "{}"'.format(exclude))
+
+    args.exclude = excludes
 
 
 def set_boolean_params(args, rsync_cmd):
