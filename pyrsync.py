@@ -50,11 +50,11 @@ def init_args():
     parser.add_argument('--exclude', type=str, nargs='+', help=HELP_EXCLUDE, default=[])
 
     parser.add_argument('--delete', action='store_true', help=HELP_DELETE, required=False)
-    parser.add_argument('--verbose', action='store_true', help=HELP_VERBOSE, required=False)
-    parser.add_argument('--progress', action='store_true', help=HELP_PROGRESS, required=False)
     parser.add_argument('--owner', action='store_true', help=HELP_OWNER, required=False)
     parser.add_argument('--group', action='store_true', help=HELP_GROUP, required=False)
     parser.add_argument('--executability', action='store_true', help=HELP_EXEC, required=False)
+    parser.add_argument('--verbose', action='store_true', help=HELP_VERBOSE, required=False)
+    parser.add_argument('--progress', action='store_true', help=HELP_PROGRESS, required=False)
     parser.add_argument('--dry-run', action='store_true', help=HELP_DRY_RUN, required=False)
     parser.add_argument('--delete-excluded', action='store_true', help=HELP_DELETE_EXCLUDED, required=False)
     parser.add_argument('--mirroring', action='store_true', help=HELP_MIRRORING, required=False)
@@ -68,12 +68,9 @@ def init_args():
 
     if args.mirroring:
         args.delete = True
-        args.verbose = True
-        args.progress = True
         args.owner = True
         args.group = True
         args.executability = True
-        args.delete_excluded = True
 
     return args
 
