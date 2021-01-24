@@ -26,7 +26,7 @@ HELP_GROUP = 'Preserves groups'
 HELP_EXEC = 'Preserves executability'
 HELP_DRY_RUN = 'Performs a trial run with no changes made'
 HELP_DELETE_EXCLUDED = 'Deletes excluded files from destination folders'
-HELP_ENABLE_ALL = 'Enable delete, verbose, progress, owner, group, executability, and delete-excluded options'
+HELP_MIRRORING = 'Enable data mirroring'
 HELP_EXCLUDE = 'Folders to be ignored'
 
 # This command will be updated based on arguments
@@ -51,7 +51,7 @@ def init_args():
     parser.add_argument('--executability', action='store_true', help=HELP_EXEC, required=False)
     parser.add_argument('--dry-run', action='store_true', help=HELP_DRY_RUN, required=False)
     parser.add_argument('--delete-excluded', action='store_true', help=HELP_DELETE_EXCLUDED, required=False)
-    parser.add_argument('--enable_all', action='store_true', help=HELP_ENABLE_ALL, required=False)
+    parser.add_argument('--mirroring', action='store_true', help=HELP_MIRRORING, required=False)
 
     args = parser.parse_args()
     args.origin = remove_ending_separator(args.origin)
@@ -60,7 +60,7 @@ def init_args():
     set_files_args(args)
     set_excludes_args(args)
 
-    if args.enable_all:
+    if args.mirroring:
         args.delete = True
         args.verbose = True
         args.progress = True
@@ -68,7 +68,6 @@ def init_args():
         args.group = True
         args.executability = True
         args.delete_excluded = True
-        args.enable_all = True
 
     return args
 
