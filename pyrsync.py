@@ -29,14 +29,11 @@ HELP_DELETE_EXCLUDED = 'Deletes excluded files from destination folders'
 HELP_MIRRORING = 'Enable data mirroring'
 HELP_EXCLUDE = 'Folders to be ignored'
 
-# This command will be updated based on arguments
-RSYNC_CMD = 'rsync -rulHt'
-
 
 def main():
     """ Sync """
     args = init_args()
-    sync(args, set_boolean_params(args, RSYNC_CMD))
+    run_rsync(args)
 
 
 def init_args():
@@ -48,7 +45,6 @@ def init_args():
     parser.add_argument('--folders', type=str, nargs='+', help=HELP_FOLDERS, default=[])
     parser.add_argument('--files', type=str, nargs='+', help=HELP_FILES, default=[])
     parser.add_argument('--exclude', type=str, nargs='+', help=HELP_EXCLUDE, default=[])
-
     parser.add_argument('--delete', action='store_true', help=HELP_DELETE, required=False)
     parser.add_argument('--owner', action='store_true', help=HELP_OWNER, required=False)
     parser.add_argument('--group', action='store_true', help=HELP_GROUP, required=False)
@@ -148,8 +144,23 @@ def set_excludes_args(args):
     args.exclude = excludes
 
 
-def set_boolean_params(args, rsync_cmd):
-    """ Enable bool parameters on the line command """
+def run_rsync(args):
+    """
+    :param argparse.Namespace args:
+    """
+    rsync_cmd = 'rsync -rulHt'
+    rsync_cmd = add_boolean_rsync_options(args, rsync_cmd)
+    rsync_cmd = add_exclude_rsync_options(args, rsync_cmd)
+    run_rsync_folders(args, rsync_cmd)
+    run_rsync_files(args, rsync_cmd)
+    run_rsync_origin_dest(args, rsync_cmd)
+
+
+def add_boolean_rsync_options(args, rsync_cmd):
+    """
+    :param argparse.Namespace args:
+    :param str rsync_cmd:
+    """
     opts = ['delete', 'verbose', 'progress', 'owner', 'group', 'executability', 'dry_run', 'delete_excluded']
 
     for opt in opts:
@@ -159,82 +170,97 @@ def set_boolean_params(args, rsync_cmd):
     return rsync_cmd
 
 
-def sync(args, rsync_cmd):
-    """ Perform sync """
-
-    # Set what should be ignored during sync
-    rsync_cmd = '{} {}'.format(rsync_cmd, ' '.join(args.exclude))
-
-    for folder in args.folders:
-        try:
-            os.makedirs(os.path.join(args.dest, folder))
-        except FileExistsError:
-            pass
-
-        print(
-            bold_msg(color_msg('rsync is synchronizing', 'green')),
-            bold_msg(color_msg(folder, 'blue'))
-        )
-
-        cmd = '{} "{}{}" "{}{}"'.format(
-            rsync_cmd,
-            os.path.join(args.origin, folder), os.sep,
-            os.path.join(args.dest, folder), os.sep
-        )
-        print(bold_msg(color_msg('Command:', 'blue')), bold_msg(color_msg(cmd, 'cyan')))
-        run_cmd(cmd)
-
-    for _file in args.files:
-        try:
-            os.makedirs(os.path.join(args.dest, os.path.dirname(_file)))
-        except FileExistsError:
-            pass
-
-        print(
-            bold_msg(color_msg('rsync is synchronizing ', 'green')),
-            bold_msg(color_msg(_file, 'magenta'))
-        )
-
-        cmd = '{} "{}" "{}"'.format(
-            rsync_cmd,
-            os.path.join(args.origin, _file),
-            os.path.join(args.dest, _file)
-        )
-        print(bold_msg(color_msg('Command:', 'magenta')), bold_msg(color_msg(cmd, 'cyan')))
-        run_cmd(cmd)
-
-    if not args.folders and not args.files:
-        run_mirroring(args, rsync_cmd)
-
-
-def run_mirroring(args, rsync_cmd):
+def add_exclude_rsync_options(args, rsync_cmd):
     """
     :param argparse.Namespace args:
     :param str rsync_cmd:
     """
-    cmd = '{} "{}" "{}"'.format(rsync_cmd, args.origin, args.dest)
+    return '{} {}'.format(rsync_cmd, ' '.join(args.exclude))
+
+
+def run_rsync_folders(args, rsync_cmd):
+    """
+    :param argparse.Namespace args:
+    :param str rsync_cmd:
+    """
+    for folder in args.folders:
+        origin_folder_path = os.path.join(args.origin, folder + os.sep)
+        dest_folder_path = os.path.join(args.dest, folder + os.sep)
+        force_mkdirs(dest_folder_path)
+        cmd = '{} "{}" "{}"'.format(rsync_cmd, origin_folder_path, dest_folder_path)
+        print_msg(origin_folder_path, dest_folder_path, cmd)
+        run_cmd(cmd)
+
+
+def run_rsync_files(args, rsync_cmd):
+    """
+    :param argparse.Namespace args:
+    :param str rsync_cmd:
+    """
+    for file in args.files:
+        dest_file_folder_path = os.path.join(args.dest, os.path.dirname(file))
+        origin_file_path = os.path.join(args.origin, file)
+        dest_file_path = os.path.join(args.dest, file)
+        force_mkdirs(dest_file_folder_path)
+        cmd = '{} "{}" "{}"'.format(rsync_cmd, origin_file_path, dest_file_path)
+        print_msg(origin_file_path, dest_file_path, cmd)
+        run_cmd(cmd)
+
+
+def run_rsync_origin_dest(args, rsync_cmd):
+    """
+    :param argparse.Namespace args:
+    :param str rsync_cmd:
+    """
+    if not args.folders and not args.files:
+        cmd = '{} "{}" "{}"'.format(rsync_cmd, args.origin, args.dest)
+        print_msg(args.origin, args.dest, cmd)
+        run_cmd(cmd)
+
+
+def force_mkdirs(path):
+    """
+    :param str path:
+    """
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        pass
+
+
+def print_msg(origin, dest, cmd):
+    """
+    :param str origin:
+    :param str dest:
+    :param str cmd:
+    """
     print(
-        bold_msg(color_msg('rsync is mirroring', 'green')),
-        bold_msg(color_msg(args.origin, 'blue')),
+        bold_msg(color_msg('rsync is synchronizing', 'green')),
+        bold_msg(color_msg(origin, 'blue')),
         bold_msg(color_msg('→', 'red')),
-        bold_msg(color_msg(args.dest, 'blue')))
+        bold_msg(color_msg(dest, 'blue')))
     print(
         bold_msg(color_msg('Command:', 'red')),
         bold_msg(color_msg(cmd, 'cyan')))
-    run_cmd(cmd)
 
 
 def bold_msg(msg):
-    """ Boldfacing a text """
+    """
+    :param str msg:
+    :return str:
+    """
     return '\033[1m{}\033[0m'.format(msg)
 
 
 def color_msg(msg, color_option='white'):
-    """ Coloring a text """
+    """
+    :param str msg:
+    :param str color_option:
+    :return str:
+    """
     colors = {
         'black': 0, 'red': 1, 'green': 2, 'yellow': 3,
-        'blue': 4, 'magenta': 5, 'cyan': 6, 'white': 7
-    }
+        'blue': 4, 'magenta': 5, 'cyan': 6, 'white': 7}
     return '\033[{}m{}\033[0m'.format(colors[color_option] + 30, msg)
 
 
