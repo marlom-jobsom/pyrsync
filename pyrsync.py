@@ -12,7 +12,6 @@ __author__ = "Marlom Oliveira"
 __email__ = "marlomjobsom@gmail.com"
 __version__ = "1.7"
 
-# Descriptions and Help messages
 DESCRIPTION_INFO = 'A simple interface to help to synchronize files and folders using rsync'
 HELP_ORIGIN = 'Where folders/files come from'
 HELP_DEST = 'Where folders/files go to'
@@ -28,6 +27,7 @@ HELP_DRY_RUN = 'Performs a trial run with no changes made'
 HELP_DELETE_EXCLUDED = 'Deletes excluded files from destination folders'
 HELP_MIRRORING = 'Enable data mirroring'
 HELP_EXCLUDE = 'Folders to be ignored'
+HELP_PRINT_CMD_ONLY = 'Shows the rsync command that would be triggered without actualy executing it'
 
 
 def main():
@@ -54,6 +54,7 @@ def init_args():
     parser.add_argument('--dry-run', action='store_true', help=HELP_DRY_RUN, required=False)
     parser.add_argument('--delete-excluded', action='store_true', help=HELP_DELETE_EXCLUDED, required=False)
     parser.add_argument('--mirroring', action='store_true', help=HELP_MIRRORING, required=False)
+    parser.add_argument('--print-cmd-only', action='store_true', help=HELP_PRINT_CMD_ONLY, required=False)
 
     args = parser.parse_args()
     args.origin = remove_ending_separator(args.origin)
@@ -187,9 +188,7 @@ def run_rsync_folders(args, rsync_cmd):
         origin_folder_path = os.path.join(args.origin, folder + os.sep)
         dest_folder_path = os.path.join(args.dest, folder + os.sep)
         force_mkdirs(dest_folder_path)
-        cmd = '{} "{}" "{}"'.format(rsync_cmd, origin_folder_path, dest_folder_path)
-        print_msg(origin_folder_path, dest_folder_path, cmd)
-        run_cmd(cmd)
+        print_and_run(rsync_cmd, origin_folder_path, dest_folder_path, args.print_cmd_only)
 
 
 def run_rsync_files(args, rsync_cmd):
@@ -202,9 +201,7 @@ def run_rsync_files(args, rsync_cmd):
         origin_file_path = os.path.join(args.origin, file)
         dest_file_path = os.path.join(args.dest, file)
         force_mkdirs(dest_file_folder_path)
-        cmd = '{} "{}" "{}"'.format(rsync_cmd, origin_file_path, dest_file_path)
-        print_msg(origin_file_path, dest_file_path, cmd)
-        run_cmd(cmd)
+        print_and_run(rsync_cmd, origin_file_path, dest_file_path, args.print_cmd_only)
 
 
 def run_rsync_origin_dest(args, rsync_cmd):
@@ -213,9 +210,7 @@ def run_rsync_origin_dest(args, rsync_cmd):
     :param str rsync_cmd:
     """
     if not args.folders and not args.files:
-        cmd = '{} "{}" "{}"'.format(rsync_cmd, args.origin, args.dest)
-        print_msg(args.origin, args.dest, cmd)
-        run_cmd(cmd)
+        print_and_run(rsync_cmd, args.origin, args.dest, args.print_cmd_only)
 
 
 def force_mkdirs(path):
@@ -226,6 +221,20 @@ def force_mkdirs(path):
         os.makedirs(path)
     except FileExistsError:
         pass
+
+
+def print_and_run(rsync_cmd, origin, dest, print_cmd_only):
+    """
+    :param str rsync_cmd:
+    :param str origin:
+    :param str dest:
+    :param bool print_cmd_only:
+    """
+    cmd = '{} "{}" "{}"'.format(rsync_cmd, origin, dest)
+    print_msg(origin, dest, cmd)
+
+    if not print_cmd_only:
+        run_cmd(cmd)
 
 
 def print_msg(origin, dest, cmd):
@@ -265,7 +274,10 @@ def color_msg(msg, color_option='white'):
 
 
 def run_cmd(cmd):
-    """ Execute command """
+    """
+    :param cmd:
+    :return tuple:
+    """
     process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE)
 
     while process.poll() is None:
