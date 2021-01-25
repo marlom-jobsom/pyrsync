@@ -210,7 +210,9 @@ def run_rsync_origin_dest(args, rsync_cmd):
     :param str rsync_cmd:
     """
     if not args.folders and not args.files:
-        print_and_run(rsync_cmd, args.origin, args.dest, args.print_cmd_only)
+        origin_folder_path = args.origin + os.sep
+        dest_folder_path = args.dest + os.sep
+        print_and_run(rsync_cmd, origin_folder_path, dest_folder_path, args.print_cmd_only)
 
 
 def force_mkdirs(path):
