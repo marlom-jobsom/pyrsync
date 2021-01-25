@@ -27,7 +27,7 @@ HELP_DRY_RUN = 'Performs a trial run with no changes made'
 HELP_DELETE_EXCLUDED = 'Deletes excluded files from destination folders'
 HELP_MIRRORING = 'Enable data mirroring'
 HELP_EXCLUDE = 'Folders to be ignored'
-HELP_PRINT_CMD_ONLY = 'Shows the rsync command that would be triggered without actualy executing it'
+HELP_PRINT_CMD_ONLY = 'Shows the rsync command that would be triggered without actually executing it'
 
 
 def main():
